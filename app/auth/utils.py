@@ -1,0 +1,1 @@
+# This is where we define utility functions for authentication
