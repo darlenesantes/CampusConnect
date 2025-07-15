@@ -3,8 +3,7 @@
     <head lang="en">
         <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"> -->
         <link rel="stylesheet" type="text/css" href="../static/style.css">
-        <meta name="google-signin-client_id" content="618664155522-8ejnfb2n6pl7h189luqasuu6n11nse14.apps.googleusercontent.com">
-
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
         <meta charset="utf-8">
     </head>
     <body>
@@ -28,20 +27,29 @@
             </div>
             <div id="sign-in-box" class="signin">
                 <h2 class="signin-text"> Sign In / Register </h2>
-                <div id="g_id_onload"
-                    data-client_id="618664155522-8ejnfb2n6pl7h189luqasuu6n11nse14.apps.googleusercontent.com"
-                    data-callback="handleCredentialResponse">
-                </div>
-                <div class="g_id_signin" 
-                    data-type="standard" 
-                    data-size="large" 
-                    data-theme="filled_blue"
-                    data-width="400"
-                    data-shape="pill">
-                </div>
+                <button id="custom-google-btn" class="custom-google-btn">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
+                    <span class="button-span">Sign in with Google</span>
+                  </button>
             </div>
         </div>
         
-        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <script>
+            function handleCredentialResponse(response) {
+                console.log("Google ID Token:", response.credential);
+            }
+  
+            window.onload = () => {
+              google.accounts.id.initialize({
+                client_id: "618664155522-8ejnfb2n6pl7h189luqasuu6n11nse14.apps.googleusercontent.com",
+                callback: handleCredentialResponse,
+              });
+          
+              document.getElementById("custom-google-btn").addEventListener("click", () => {
+                google.accounts.id.prompt();
+              });
+            };
+          </script>
+          
     </body>
 </html>
