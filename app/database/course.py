@@ -15,3 +15,4 @@ class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True) # course ID
     # course_number
     # course_name
+    # course_subject
