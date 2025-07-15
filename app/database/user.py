@@ -1,6 +1,7 @@
-# This is where we define user-related database models and queries
+""" This is where we define user-related database models and queries """
+# user.py
 from . import db
-from .course import Course
+from .course import Course, enrollments
 
 # User model:
 # - represents a user in the system
@@ -12,8 +13,15 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)  # user ID
     # name
+    name = db.Column(db.String(100), nullable=False)
     # email
+    email = db.Column(db.String(120), unique=True, nullable=False)
     # preferences (quiet, collaborative, etc.)
+    preferences = db.Column(db.String(50), nullable=True)
 
-    # courses that the user is enrolled in
-    # db.relationship('Course', secondary='enrollments', backref='users')
+    # This will keep track of whether the user has completed their profile setup
+    # profile_completed (boolean)
+    profile_completed = db.Column(db.Boolean, default=False)
+
+    # courses that the user is enrolled in (once that has been implemented)
+    courses = db.relationship('Course', secondary='enrollments', backref='users')
