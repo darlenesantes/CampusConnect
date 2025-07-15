@@ -1,1 +1,47 @@
-<p> test </p>
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}"> -->
+        <link rel="stylesheet" type="text/css" href="../static/style.css">
+        <meta name="google-signin-client_id" content="618664155522-8ejnfb2n6pl7h189luqasuu6n11nse14.apps.googleusercontent.com">
+
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1 class="welcome">Welcome to CampusConnect!</h1>
+        
+        <div class="flex-container">
+            <div class="welcome-display">
+                <h2 class="display-top">Features:</h2>
+                <div class="display-item">
+                    <div class="box"></div>
+                    <h2 class="display-text">Course Matching</h2>
+                </div>
+                <div class="display-item">
+                    <div class="box"></div>
+                    <h2 class="display-text">Schedule Syncing</h2>
+                </div>
+                <div class="display-item">
+                    <div class="box"></div>
+                    <h2 class="display-text">Study Groups</h2>
+                </div>
+            </div>
+            <div id="sign-in-box" class="signin">
+                <h2 class="signin-text"> Sign In / Register </h2>
+                <div id="g_id_onload"
+                    data-client_id="618664155522-8ejnfb2n6pl7h189luqasuu6n11nse14.apps.googleusercontent.com"
+                    data-callback="handleCredentialResponse">
+                </div>
+                <div class="g_id_signin" 
+                    data-type="standard" 
+                    data-size="large" 
+                    data-theme="filled_blue"
+                    data-width="400"
+                    data-shape="pill">
+                </div>
+            </div>
+        </div>
+        
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+    </body>
+</html>
