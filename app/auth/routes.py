@@ -3,14 +3,18 @@
 # ex: /callback handles token exchange and user creation (or something)
 from flask_oauthlib.client import OAuth
 from flask import Flask, jsonify, session
+from dotenv import load_dotenv
+import os
+import secrets
 import requests
 
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_here'
+app.secret_key = secrets.token_hex(16)
 
-google_client_id = 'your_google_client_id_here'
-google_client_secret = 'your_google_client_secret_here'
-google_redirect_uri = 'your_google_redirect_uri_here'
+google_client_id = os.getenv('CLIENT_ID')
+google_client_secret = os.getenv('CLIENT_SECRET_KEY')
+google_redirect_uri = 'http://localhost:3000'
 
 oauth = OAuth(app)
 google = oauth.remote_app(
@@ -53,7 +57,7 @@ def authorized():
 
 @app.route('/logout')
 def logout():
-    session.pop('google_token',p None)
+    session.pop('google_token', None)
     return Flask.redirect(Flask.url_for('index'))
 
 @oauth.tokengetter
