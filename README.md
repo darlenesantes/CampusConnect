@@ -1,223 +1,78 @@
-# CampusConnect Study Buddy App
+# Campus Connect
+A web app that matches college students with ideal study partners based on shared courses, study preferences, GPA, and more.
 
-A web application that connects college students with study partners based on shared courses, availability, and study preferences.
+Built with **Python, Flask, SQLAlchemy, Google OAuth,** and **SQLite**.
 
-## Problem Statement
-
-Students struggle to find compatible study partners in their courses, often studying alone or in mismatched groups. CampusConnect solves this by automatically matching students based on course enrollment, schedule compatibility, and learning preferences.
+Live at: https://seocampusconnect.pythonanywhere.com/
 
 ## Features
+* Secure login via Google OAuth
 
-### Core MVP Features
-- **Google OAuth Authentication** - Secure sign-in with university Google accounts
-- **Profile Setup** - Course selection, time availability, and study preferences
-- **Smart Matching** - Algorithm matches students based on overlapping courses, schedules, and study styles
-- **Dashboard** - View potential study partners and confirmed matches
-- **Email Confirmations** - Optional email notifications for confirmed study sessions
+* Profile setup: campus, major, GPA, study style, and enrolled courses
 
-### Target Users
-- College students seeking study partners
-- Students enrolled in challenging courses requiring collaborative study
-- Users comfortable with Google-based authentication
+* Smart study group matching algorithm with compatibility scoring
 
-## Technical Architecture
+* Campus-specific dining halls, study spots, and course data
 
-### Tech Stack
-- **Frontend**: React.js with responsive design
-- **Backend**: Node.js/Express or Python/Flask
-- **Database**: PostgreSQL or MongoDB
-- **Authentication**: Google OAuth 2.0
-- **Email Service**: SendGrid or similar
-- **Deployment**: Vercel/Netlify (frontend), Heroku/Railway (backend)
+* Demo mode with 50+ test students
 
-### Database Schema
+* Personalized dashboard showing top study matches
 
-```sql
--- Users table
-Users (
-  id, email, name, google_id, created_at, updated_at
-)
+## Log in with Google
 
--- Courses table
-Courses (
-  id, course_code, course_name, university
-)
+* Fill out your profile
 
--- User-Course associations
-UserCourses (
-  user_id, course_id, semester, year
-)
+* View your top study partner matches on the dashboard
 
--- Availability tracking
-Availability (
-  user_id, day_of_week, start_time, end_time
-)
+## Local Installation (for development)
 
--- Study preferences
-StudyPreferences (
-  user_id, group_size, study_style, location_preference, notes
-)
+1. Clone the repository
+2. Create and activate a virtual environment (optional)
 
--- Study matches
-StudyMatches (
-  id, user1_id, user2_id, course_id, status, created_at
-)
+3. Install dependencies:
+
+    ```pip install -r requirements.txt```
+
+4. Set up environment variables by creating a .env file:
+
+    ``` GOOGLE_CLIENT_ID=your_google_client_id ```
+    ``` GOOGLE_CLIENT_SECRET=your_google_client_secret ```
+
+5. Initialize the database with test data
+
+6. Start the app
+
+### How It Works
+* **Google OAuth** logs in users and creates accounts if new.
+
+* **Profile setup** collects user data and stores it in the database.
+
+* **Matching logic** in find_study_matches() ranks study partners by shared courses, preferences, and major.
+
+* **Dashboard** displays top matches and shared course info.
+
+### Project Structure
 ```
-
-## User Flow
-
-1. **Sign-In** - User authenticates via Google OAuth
-2. **Profile Setup** - User completes profile with:
-   - Course selections (dropdown or manual entry)
-   - Weekly availability (time slots per day)
-   - Study preferences (group size, quiet vs. discussion, location)
-3. **Matching** - Backend algorithm finds compatible study partners
-4. **Dashboard** - User views potential matches and confirmed study sessions
-5. **Connect** - Users confirm matches and receive email notifications
-
-## Matching Algorithm
-
-The system matches users based on:
-- **Course Overlap** - Must share at least one course
-- **Time Compatibility** - Overlapping availability windows
-- **Study Style** - Compatible preferences (quiet vs. discussion, group size)
-- **Priority Score** - Recent activity, course difficulty, match history
-
-## API Integrations
-
-### Required APIs
-- **Google OAuth 2.0** - User authentication
-- **Google Calendar API** - Optional calendar integration
-- **Email Service** - Match notifications (SendGrid/Mailgun)
-
-### Optional APIs
-- **University Course Catalog** - Automated course data
-- **Campus Map API** - Study location suggestions
-
-## Installation & Setup
-
-### Prerequisites
-- Node.js 18+ or Python 3.8+
-- PostgreSQL or MongoDB
-- Google Cloud Console project with OAuth credentials
-
-### Environment Variables
-```bash
-# Database
-DATABASE_URL=postgresql://username:password@localhost/campusconnect
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-
-# Email Service
-SENDGRID_API_KEY=your_sendgrid_key
-
-# App Settings
-JWT_SECRET=your_jwt_secret
-FRONTEND_URL=http://localhost:3000
+campus-connect/
+├── app/
+│   ├── templates/              # HTML templates
+│   ├── database/               # SQLAlchemy models
+│   └── dummy_data/             # Seed data for campuses and users
+├── main.py                     # App logic and routing
+├── requirements.txt
+├── .env                        # API credentials (not committed)
 ```
+### Requirements
+* Flask
 
-### Development Setup
-```bash
-# Clone repository
-git clone https://github.com/yourusername/campusconnect
-cd campusconnect
+* SQLAlchemy
 
-# Backend setup
-cd backend
-npm install
-npm run dev
+* Authlib (for OAuth)
 
-# Frontend setup (new terminal)
-cd frontend
-npm install
-npm start
-```
+* python-dotenv
 
-## Project Structure
+* Flask-CORS
 
-```
-campusconnect/
-├── backend/
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── users.js
-│   │   ├── courses.js
-│   │   └── matches.js
-│   ├── models/
-│   ├── middleware/
-│   └── server.js
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── hooks/
-│   │   └── utils/
-│   └── public/
-├── database/
-│   └── migrations/
-└── README.md
-```
+Install with:
 
-## Key Risks & Mitigation
-
-### Technical Risks
-- **OAuth Integration Complexity** - Use established libraries (passport.js, react-oauth)
-- **Matching Algorithm Performance** - Implement efficient database queries with indexing
-- **Email Delivery** - Use reliable service (SendGrid) with fallback options
-
-### User Experience Risks
-- **Vague Time Selection** - Provide clear time slot options (hourly blocks)
-- **Messy Course Input** - Implement autocomplete and validation
-- **Low User Adoption** - Focus on single university for initial launch
-
-## Success Metrics
-
-- **User Registration** - 50+ students sign up during beta
-- **Match Success Rate** - 70% of matches result in confirmed study sessions
-- **User Retention** - 60% of users return within one week
-- **Technical Performance** - <2 second load times, 99% uptime
-
-## Development Timeline (1 Week)
-
-### Days 1-2: Foundation
-- Set up project structure
-- Implement Google OAuth
-- Create basic database schema
-
-### Days 3-4: Core Features
-- Build user profile system
-- Implement matching algorithm
-- Create dashboard UI
-
-### Days 5-6: Integration
-- Connect frontend to backend
-- Add email notifications
-- Testing and bug fixes
-
-### Day 7: Deployment
-- Deploy to production
-- Final testing
-- Documentation
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-Project Team: Ohi, Darlene, William
-GitHub: @Ohimoiza1205
-
----
-
-*Built for college students to enhance collaborative learning and academic success.*# CampusConnect
+```pip install -r requirements.txt```
