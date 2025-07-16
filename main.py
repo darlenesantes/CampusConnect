@@ -7,6 +7,7 @@ from app.database.campus import Campus, DiningHall, StudyLocation
 from app.database.user import User, Major
 from app.database.course import Course, UserCourse
 from app.dummy_data.dummy_data import CAMPUS_DATA, DINING_DATA, STUDY_DATA, MAJORS_DATA, COURSES_DATA, DEMO_NAMES
+from pathlib import Path
 import os
 from datetime import datetime, timedelta
 import secrets
@@ -14,10 +15,11 @@ import random
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(env_path)
 
 app = Flask(__name__, template_folder='app/templates')
-CORS(app, origins=['http://127.0.0.1:5000/'])
+CORS(app, origins=['http://127.0.0.1:5000/', 'https://seocampusconnect.pythonanywhere.com/'])
 
 # Configuration
 app.config['SECRET_KEY'] = secrets.token_hex(16)
