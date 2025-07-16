@@ -196,7 +196,7 @@ def get_campus_data(campus_id):
 @app.route('/')
 def index():
     if 'user' in session:
-        return redirect('dashboard.html')
+        return redirect('dashboard')
     return render_template('login.html')
 
 @app.route('/login')
