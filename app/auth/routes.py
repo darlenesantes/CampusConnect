@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-# This is where we register auth, dashboards, and other routes
-# Ex: /auth/login redirects to the login page (google oauth)
-# ex: /callback handles token exchange and user creation (or something)
-=======
 from flask import Blueprint, render_template, redirect, url_for, session, flash
 from authlib.integrations.flask_client import OAuth
 from app.database.user import User
@@ -26,4 +21,3 @@ def logout():
     session.pop('user', None)
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.index'))
->>>>>>> e86c179ae670f259e3f9485453cc6bd9771385c7
