@@ -1,1 +1,12 @@
 .env
+<<<<<<< HEAD
+=======
+*.db
+__pycache__/
+.DS_Store
+node_modules/
+.vscode/
+*.pyc
+.pytest_cache/
+instance/
+>>>>>>> e86c179ae670f259e3f9485453cc6bd9771385c7
