@@ -27,16 +27,33 @@
             </div>
             <div id="sign-in-box" class="signin">
                 <h2 class="signin-text"> Sign In / Register </h2>
-                <button id="custom-google-btn" class="custom-google-btn">
+                <a href="\login" id="custom-google-btn" class="custom-google-btn">
                     <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo">
                     <span class="button-span">Sign in with Google</span>
-                  </button>
+                </a>
             </div>
         </div>
         
         <script>
             function handleCredentialResponse(response) {
-                console.log("Google ID Token:", response.credential);
+                console.log("Credential method call")
+                token = response.credential;
+                console.log("Google ID Token:", token);
+
+                fetch("http://localhost:5000/verify", {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ token: token })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Server response:", data);
+                })
+                .catch(err => {
+                    console.error("Fetch error:", err);
+                });
             }
   
             window.onload = () => {
