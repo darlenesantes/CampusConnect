@@ -1,7 +1,6 @@
 """ This is where we define user-related database models and queries """
 # user.py
 from . import db
-from .course import Course, enrollments
 
 # User model:
 # - represents a user in the system

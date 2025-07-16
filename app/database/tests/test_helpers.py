@@ -15,6 +15,8 @@ from app.database.helpers import (
     create_study_session,
     get_user_study_sessions,
     get_course_study_sessions,
+    join_study_session,
+    leave_study_session
 )
 
 class HelpersTestCase(unittest.TestCase):
@@ -118,3 +120,48 @@ class HelpersTestCase(unittest.TestCase):
         sessions = get_course_study_sessions(self.course.id)
         self.assertEqual(len(sessions), 1)
         self.assertEqual(sessions[0].location, "PCL")
+
+    def test_join_and_leave_study_session(self):
+        """Test joining and leaving a study session."""
+        result = create_study_session(
+            course_id=self.course.id,
+            creator_id=self.user.id,
+            location="PCL",
+            time=datetime.now(),
+            duration=60,
+            session_type="collaborative"
+        )
+
+        self.assertTrue(result)
+
+        session = StudySession.query.first()
+
+        joined = join_study_session(session.id, self.user.id)
+        self.assertTrue(joined)
+        db.session.refresh(session)
+        self.assertIn(self.user, session.participants)
+
+        left = leave_study_session(session.id, self.user.id)
+        self.assertTrue(left)
+        db.session.refresh(session)
+        self.assertNotIn(self.user, session.participants)
+
+    def test_double_join_study_session(self):
+        """Test that a user cannot join the same study session twice."""
+        result = create_study_session(
+            course_id=self.course.id,
+            creator_id=self.user.id,
+            location="PCL",
+            time=datetime.now(),
+            duration=60,
+            session_type="collaborative"
+        )
+        self.assertTrue(result)
+
+        session = StudySession.query.first()
+
+        joined_first = join_study_session(session.id, self.user.id)
+        self.assertTrue(joined_first)
+
+        joined_second = join_study_session(session.id, self.user.id)
+        self.assertFalse(joined_second)  # Should return False since already joined
