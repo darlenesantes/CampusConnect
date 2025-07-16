@@ -14,8 +14,6 @@ Live at: https://seocampusconnect.pythonanywhere.com/
 
 * Campus-specific dining halls, study spots, and course data
 
-* Demo mode with 50+ test students
-
 * Personalized dashboard showing top study matches
 
 ## Log in with Google
@@ -24,25 +22,7 @@ Live at: https://seocampusconnect.pythonanywhere.com/
 
 * View your top study partner matches on the dashboard
 
-## Local Installation (for development)
-
-1. Clone the repository
-2. Create and activate a virtual environment (optional)
-
-3. Install dependencies:
-
-    ```pip install -r requirements.txt```
-
-4. Set up environment variables by creating a .env file:
-
-    ``` GOOGLE_CLIENT_ID=your_google_client_id ```
-    ``` GOOGLE_CLIENT_SECRET=your_google_client_secret ```
-
-5. Initialize the database with test data
-
-6. Start the app
-
-### How It Works
+## How It Works
 * **Google OAuth** logs in users and creates accounts if new.
 
 * **Profile setup** collects user data and stores it in the database.
@@ -51,7 +31,7 @@ Live at: https://seocampusconnect.pythonanywhere.com/
 
 * **Dashboard** displays top matches and shared course info.
 
-### Project Structure
+## Project Structure
 ```
 campus-connect/
 ├── app/
@@ -62,17 +42,3 @@ campus-connect/
 ├── requirements.txt
 ├── .env                        # API credentials (not committed)
 ```
-### Requirements
-* Flask
-
-* SQLAlchemy
-
-* Authlib (for OAuth)
-
-* python-dotenv
-
-* Flask-CORS
-
-Install with:
-
-```pip install -r requirements.txt```
