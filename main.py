@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, template_folder='app/templates')
-CORS(app, origins=['http://127.0.0.1:5000/'])
+CORS(app, origins=['http://127.0.0.1:5000/', 'https://seocampusconnect.pythonanywhere.com/'])
 
 # Configuration
 app.config['SECRET_KEY'] = secrets.token_hex(16)
