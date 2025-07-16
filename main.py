@@ -23,7 +23,7 @@ CORS(app, origins=['http://127.0.0.1:5000/', 'https://seocampusconnect.pythonany
 
 # Configuration
 app.config['SECRET_KEY'] = secrets.token_hex(16)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///campus_connect.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////campus_connect.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
@@ -181,6 +181,77 @@ def find_study_matches(user_id):
     matches.sort(key=lambda x: x['compatibility'], reverse=True)
     return matches[:8]  # Return top 8 matches
 
+def init_db():
+    """Initialize database with comprehensive data"""
+    with app.app_context():
+        # Drop all tables and recreate (for development)
+        db.drop_all()
+        db.create_all()
+        
+        # Add campuses
+        for campus_data in CAMPUS_DATA:
+            campus = Campus(**campus_data)
+            db.session.add(campus)
+        db.session.commit()
+        
+        # Add dining halls for each campus
+        for campus in Campus.query.all():
+            if campus.code in DINING_DATA:
+                for dining_name in DINING_DATA[campus.code]:
+                    dining_hall = DiningHall(
+                        name=dining_name,
+                        campus_id=campus.id,
+                        hours="7:00 AM - 10:00 PM",
+                        cuisine_type=random.choice(['American', 'International', 'Asian', 'Mediterranean', 'Vegetarian'])
+                    )
+                    db.session.add(dining_hall)
+            
+            # Add study locations for each campus
+            if campus.code in STUDY_DATA:
+                for study_name in STUDY_DATA[campus.code]:
+                    location_type = 'library' if 'Library' in study_name else \
+                                  'study_room' if 'Study Room' in study_name or 'Room' in study_name else \
+                                  'lounge' if 'Lounge' in study_name else 'other'
+                    
+                    study_location = StudyLocation(
+                        name=study_name,
+                        campus_id=campus.id,
+                        location_type=location_type,
+                        capacity=random.randint(20, 200),
+                        amenities=random.choice(['WiFi, Power Outlets', 'Whiteboards, WiFi', 'Quiet Zone, WiFi', '24/7 Access, WiFi'])
+                    )
+                    db.session.add(study_location)
+        
+        db.session.commit()
+        
+        # Add majors
+        for major_data in MAJORS_DATA:
+            major = Major(**major_data)
+            db.session.add(major)
+        db.session.commit()
+        
+        # Add courses for each campus
+        for campus in Campus.query.all():
+            for dept, courses in COURSES_DATA.items():
+                for code, name, difficulty in courses:
+                    course = Course(
+                        code=code,
+                        name=name,
+                        department=dept,
+                        campus_id=campus.id,
+                        credits=random.choice([3, 4]),
+                        difficulty=difficulty
+                    )
+                    db.session.add(course)
+        db.session.commit()
+        
+        # Create demo users
+        create_demo_users()
+        
+        print("Database initialized with comprehensive campus data!")
+        print(f"Created: {Campus.query.count()} campuses, {Major.query.count()} majors, {Course.query.count()} courses, {User.query.filter_by(is_demo_user=True).count()} demo users")
+
+
 # API Routes
 @app.route('/api/campus-data/<int:campus_id>')
 def get_campus_data(campus_id):
@@ -197,6 +268,9 @@ def get_campus_data(campus_id):
 # Main Routes
 @app.route('/')
 def index():
+    init_db()
+    with app.app_context():
+        db.create_all()
     if 'user' in session:
         return redirect('dashboard')
     return render_template('login.html')
@@ -299,76 +373,5 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
-def init_db():
-    """Initialize database with comprehensive data"""
-    with app.app_context():
-        # Drop all tables and recreate (for development)
-        db.drop_all()
-        db.create_all()
-        
-        # Add campuses
-        for campus_data in CAMPUS_DATA:
-            campus = Campus(**campus_data)
-            db.session.add(campus)
-        db.session.commit()
-        
-        # Add dining halls for each campus
-        for campus in Campus.query.all():
-            if campus.code in DINING_DATA:
-                for dining_name in DINING_DATA[campus.code]:
-                    dining_hall = DiningHall(
-                        name=dining_name,
-                        campus_id=campus.id,
-                        hours="7:00 AM - 10:00 PM",
-                        cuisine_type=random.choice(['American', 'International', 'Asian', 'Mediterranean', 'Vegetarian'])
-                    )
-                    db.session.add(dining_hall)
-            
-            # Add study locations for each campus
-            if campus.code in STUDY_DATA:
-                for study_name in STUDY_DATA[campus.code]:
-                    location_type = 'library' if 'Library' in study_name else \
-                                  'study_room' if 'Study Room' in study_name or 'Room' in study_name else \
-                                  'lounge' if 'Lounge' in study_name else 'other'
-                    
-                    study_location = StudyLocation(
-                        name=study_name,
-                        campus_id=campus.id,
-                        location_type=location_type,
-                        capacity=random.randint(20, 200),
-                        amenities=random.choice(['WiFi, Power Outlets', 'Whiteboards, WiFi', 'Quiet Zone, WiFi', '24/7 Access, WiFi'])
-                    )
-                    db.session.add(study_location)
-        
-        db.session.commit()
-        
-        # Add majors
-        for major_data in MAJORS_DATA:
-            major = Major(**major_data)
-            db.session.add(major)
-        db.session.commit()
-        
-        # Add courses for each campus
-        for campus in Campus.query.all():
-            for dept, courses in COURSES_DATA.items():
-                for code, name, difficulty in courses:
-                    course = Course(
-                        code=code,
-                        name=name,
-                        department=dept,
-                        campus_id=campus.id,
-                        credits=random.choice([3, 4]),
-                        difficulty=difficulty
-                    )
-                    db.session.add(course)
-        db.session.commit()
-        
-        # Create demo users
-        create_demo_users()
-        
-        print("Database initialized with comprehensive campus data!")
-        print(f"Created: {Campus.query.count()} campuses, {Major.query.count()} majors, {Course.query.count()} courses, {User.query.filter_by(is_demo_user=True).count()} demo users")
-
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, port=5000)
