@@ -139,3 +139,61 @@ def get_course_study_sessions(course_id):
         print("No study sessions found for this course.")
         return []
     return sessions
+
+def join_study_session(session_id, user_id):
+    """Join a study session."""
+    user = db.session.get(User, user_id)
+    session = db.session.get(StudySession, session_id)
+
+    # Check if user and session exist
+    if not user or not session:
+        print("User or Study Session not found.")
+        return False
+    
+    # Check if user is already a participant
+    if user in session.participants:
+        print("User is already a participant in this session.")
+        return False
+    
+    # Add user to session participants
+    session.participants.append(user)
+    db.session.commit()
+    print("User joined the study session successfully.")
+    return True
+
+def leave_study_session(session_id, user_id):
+    """Leave a study session."""
+    user = db.session.get(User, user_id)
+    session = db.session.get(StudySession, session_id)
+
+    # Check if user and session exist
+    if not user or not session:
+        print("User or Study Session not found.")
+        return False
+    
+    # Check if user is a participant
+    if user not in session.participants:
+        print("User is not a participant in this session.")
+        return False
+    
+    # Remove user from session participants
+    session.participants.remove(user)
+    db.session.commit()
+    print("User left the study session successfully.")
+    return True
+
+def get_study_session_participants(session_id):
+    """Get all participants in a study session."""
+    session = db.session.get(StudySession, session_id)
+
+    # Check if session exists
+    if not session:
+        print("Study Session not found.")
+        return []
+    
+    # Get all participants in the session
+    participants = session.participants
+    if not participants:
+        print("No participants found in this session.")
+        return []
+    return participants

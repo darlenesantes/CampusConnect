@@ -4,6 +4,14 @@
 
 from . import db
 
+# Session participants table:
+# - many-to-many relationship between users and study sessions
+session_participants = db.Table(
+    'session_participants',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('session_id', db.Integer, db.ForeignKey('study_sessions.id'), primary_key=True)
+)
+
 class StudySession(db.Model):
     __tablename__ = 'study_sessions'
 
@@ -30,3 +38,4 @@ class StudySession(db.Model):
     # creator (user who created the session)
     creator = db.relationship('User', backref='created_sessions')
     # participants (users who joined the session?) -> come back and add if needed
+    participants = db.relationship('User', secondary=session_participants, backref='joined_sessions')
