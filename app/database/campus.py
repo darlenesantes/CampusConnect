@@ -1,4 +1,4 @@
-from app import db
+from . import db
 
 class Campus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
