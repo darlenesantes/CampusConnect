@@ -1,0 +1,139 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-gear me-2"></i>
+                    Complete Your Profile
+                </h4>
+                <p class="text-muted mb-0">Help us find the perfect study matches for you</p>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST" id="profileForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="campus" class="form-label">Campus</label>
+                                <select class="form-select" id="campus" name="campus" required>
+                                    <option value="">Select your campus</option>
+                                    <option value="University of Illinois">University of Illinois</option>
+                                    <option value="Northwestern University">Northwestern University</option>
+                                    <option value="DePaul University">DePaul University</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="major" class="form-label">Major</label>
+                                <input type="text" class="form-control" id="major" name="major" placeholder="e.g., Computer Science" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="year" class="form-label">Academic Year</label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="">Select year</option>
+                                    <option value="Freshman">Freshman</option>
+                                    <option value="Sophomore">Sophomore</option>
+                                    <option value="Junior">Junior</option>
+                                    <option value="Senior">Senior</option>
+                                    <option value="Graduate">Graduate</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="study_style" class="form-label">Study Style</label>
+                                <select class="form-select" id="study_style" name="study_style" required>
+                                    <option value="">Select preference</option>
+                                    <option value="quiet">Quiet Study</option>
+                                    <option value="discussion">Discussion-Based</option>
+                                    <option value="group">Group Study</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="preferred_location" class="form-label">Preferred Study Location</label>
+                        <input type="text" class="form-control" id="preferred_location" name="preferred_location" placeholder="e.g., Main Library, Student Center">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Select Your Courses</label>
+                        <div class="row">
+                            {% for course in courses %}
+                            <div class="col-md-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="courses" value="{{ course.code }}" id="course_{{ course.id }}">
+                                    <label class="form-check-label" for="course_{{ course.id }}">
+                                        <strong>{{ course.code }}</strong> - {{ course.name }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">Select at least one course to find study matches</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Weekly Availability</label>
+                        <p class="text-muted small">When are you typically available to study?</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                    {% for day in days %}
+                                    <tr>
+                                        <td>{{ day }}</td>
+                                        <td>
+                                            <input type="time" class="form-control form-control-sm" name="availability_{{ loop.index0 }}_start">
+                                        </td>
+                                        <td>
+                                            <input type="time" class="form-control form-control-sm" name="availability_{{ loop.index0 }}_end">
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Leave blank for days you're not available</small>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Complete Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    const selectedCourses = document.querySelectorAll('input[name="courses"]:checked');
+    if (selectedCourses.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one course.');
+    }
+});
+</script>
+{% endblock %}

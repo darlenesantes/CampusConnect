@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body text-center p-5">
+                <div class="mb-4">
+                    <i class="bi bi-people-fill text-primary" style="font-size: 4rem;"></i>
+                    <h1 class="h3 mb-3 fw-normal">CampusConnect</h1>
+                    <p class="text-muted">Find your perfect study buddy</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h4>Connect. Study. Succeed.</h4>
+                    <p class="text-muted">Join thousands of students who are already studying together and achieving their academic goals.</p>
+                </div>
+                
+                <div class="features mb-4">
+                    <div class="row text-start">
+                        <div class="col-12 mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Match with students in your courses</small>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Find compatible study styles</small>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Schedule study sessions easily</small>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <small>Secure login with Google</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                    <i class="bi bi-google me-2"></i>
+                    Sign in with Google
+                </a>
+                
+                <p class="text-muted small mb-0">
+                    By signing in, you agree to our terms of service and privacy policy.
+                </p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <div class="row">
+                <div class="col-4">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <i class="bi bi-people text-primary mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>1000+</h6>
+                            <small class="text-muted">Active Students</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <i class="bi bi-book text-primary mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>50+</h6>
+                            <small class="text-muted">Courses</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="card bg-light">
+                        <div class="card-body py-3">
+                            <i class="bi bi-calendar-event text-primary mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>200+</h6>
+                            <small class="text-muted">Study Sessions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

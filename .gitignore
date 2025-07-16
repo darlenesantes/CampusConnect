@@ -1,2 +1,9 @@
 .env
-.env
+*.db
+__pycache__/
+.DS_Store
+node_modules/
+.vscode/
+*.pyc
+.pytest_cache/
+instance/
