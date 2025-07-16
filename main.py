@@ -1,6 +1,9 @@
 from flask import Flask, render_template_string, redirect, url_for, session, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.flask_client import OAuth
+from app.database.campus import Campus, DiningHall, StudyLocation
+from app.database.user import User, Major
+from app.database.course import Course, UserCourse
 import os
 from datetime import datetime, timedelta
 import secrets
@@ -34,77 +37,8 @@ google = oauth.register(
 )
 
 # Enhanced Database Models
-class Campus(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), unique=True, nullable=False)
-    city = db.Column(db.String(100), nullable=False)
-    state = db.Column(db.String(50), nullable=False)
-    code = db.Column(db.String(10), unique=True, nullable=False)
-    
-    users = db.relationship('User', backref='campus_info', lazy=True)
-    dining_halls = db.relationship('DiningHall', backref='campus', lazy=True)
-    study_locations = db.relationship('StudyLocation', backref='campus', lazy=True)
-    courses = db.relationship('Course', backref='campus', lazy=True)
 
-class DiningHall(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    campus_id = db.Column(db.Integer, db.ForeignKey('campus.id'), nullable=False)
-    hours = db.Column(db.String(100))
-    cuisine_type = db.Column(db.String(100))
 
-class StudyLocation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    campus_id = db.Column(db.Integer, db.ForeignKey('campus.id'), nullable=False)
-    location_type = db.Column(db.String(50))  # 'library', 'study_room', 'lounge', 'outdoor'
-    capacity = db.Column(db.Integer)
-    amenities = db.Column(db.String(500))
-
-class Major(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    department = db.Column(db.String(100), nullable=False)
-    degree_type = db.Column(db.String(50))  # 'BS', 'BA', 'MS', 'PhD'
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    profile_picture = db.Column(db.String(200))
-    campus_id = db.Column(db.Integer, db.ForeignKey('campus.id'))
-    major_id = db.Column(db.Integer, db.ForeignKey('major.id'))
-    year = db.Column(db.String(20))
-    study_style = db.Column(db.String(50))
-    preferred_dining_hall_id = db.Column(db.Integer, db.ForeignKey('dining_hall.id'))
-    preferred_study_location_id = db.Column(db.Integer, db.ForeignKey('study_location.id'))
-    gpa = db.Column(db.Float)
-    bio = db.Column(db.Text)
-    is_demo_user = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    courses = db.relationship('UserCourse', backref='user', lazy=True, cascade='all, delete-orphan')
-    major_info = db.relationship('Major', backref='students')
-    preferred_dining = db.relationship('DiningHall', backref='preferred_by_users')
-    preferred_study = db.relationship('StudyLocation', backref='preferred_by_users')
-
-class Course(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), nullable=False)
-    name = db.Column(db.String(200), nullable=False)
-    department = db.Column(db.String(100))
-    campus_id = db.Column(db.Integer, db.ForeignKey('campus.id'), nullable=False)
-    credits = db.Column(db.Integer, default=3)
-    difficulty = db.Column(db.String(20))  # 'Easy', 'Medium', 'Hard'
-
-class UserCourse(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
-    semester = db.Column(db.String(20), default='Fall 2025')
-    grade_goal = db.Column(db.String(5))  # 'A', 'B', 'C', etc.
-    
-    course = db.relationship('Course')
 
 # Campus data with real universities
 CAMPUS_DATA = [
