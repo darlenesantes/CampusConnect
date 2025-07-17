@@ -1,0 +1,226 @@
+{% extends "layout.html" %}
+
+{% block title %}Study Planner - Purdue{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="bi bi-calendar-check me-2"></i>Study Planner</h2>
+        <p class="text-muted">Plan your exam preparation and track your progress</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPlanModal">
+            <i class="bi bi-plus-circle me-2"></i>New Study Plan
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-check me-2"></i>Your Study Plans</h5>
+            </div>
+            <div class="card-body">
+                {% if study_plans %}
+                    {% for plan in study_plans %}
+                    <div class="study-plan-item p-3 mb-3 border rounded">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h6 class="mb-1">{{ plan.exam_name }}</h6>
+                                <small class="text-muted">{{ plan.course.course_number }} - {{ plan.course.course_name }}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Exam Date:</small><br>
+                                <strong>{{ plan.exam_date.strftime('%B %d, %Y') }}</strong>
+                                <br><small class="text-{% if (plan.exam_date - now()).days <= 7 %}danger{% elif (plan.exam_date - now()).days <= 14 %}warning{% else %}success{% endif %}">
+                                    {{ (plan.exam_date - now()).days }} days remaining
+                                </small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="progress mb-2">
+                                    {% set progress = (plan.hours_completed / plan.prep_hours_needed * 100) if plan.prep_hours_needed > 0 else 0 %}
+                                    <div class="progress-bar" style="width: {{ progress }}%"></div>
+                                </div>
+                                <small>{{ plan.hours_completed }}/{{ plan.prep_hours_needed }} hours</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary me-2" onclick="logStudyHours({{ plan.id }})">
+                                <i class="bi bi-plus"></i> Log Hours
+                            </button>
+                            {% if (plan.exam_date - now()).days <= 14 %}
+                            <span class="badge bg-warning">Exam approaching!</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="mt-3">No study plans yet</h5>
+                        <p class="text-muted">Create your first study plan to track exam preparation</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPlanModal">
+                            <i class="bi bi-plus-circle me-2"></i>Create Study Plan
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="bi bi-lightbulb me-2"></i>Study Tips</h6>
+            </div>
+            <div class="card-body">
+                <div class="tip-item mb-3">
+                    <strong>Spaced Repetition</strong>
+                    <p class="small text-muted">Review material multiple times over increasing intervals for better retention.</p>
+                </div>
+                <div class="tip-item mb-3">
+                    <strong>Pomodoro Technique</strong>
+                    <p class="small text-muted">Study for 25 minutes, then take a 5-minute break. Repeat 4 times, then longer break.</p>
+                </div>
+                <div class="tip-item mb-3">
+                    <strong>Study Groups</strong>
+                    <p class="small text-muted">Teaching others helps reinforce your own understanding.</p>
+                </div>
+                <div class="tip-item">
+                    <strong>WALC Study Rooms</strong>
+                    <p class="small text-muted">Book study rooms at WALC for focused group sessions.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="bi bi-graph-up me-2"></i>Study Stats</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="row">
+                    <div class="col-6">
+                        <h4 class="text-primary">{{ study_plans|length }}</h4>
+                        <small class="text-muted">Active Plans</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">
+                            {% set total_hours = study_plans|sum(attribute='hours_completed') %}
+                            {{ total_hours or 0 }}
+                        </h4>
+                        <small class="text-muted">Hours Logged</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Study Plan Modal -->
+<div class="modal fade" id="createPlanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Study Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPlanForm">
+                    <div class="mb-3">
+                        <label class="form-label">Course</label>
+                        <select class="form-select" name="course_id" required>
+                            <option value="">Select course</option>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}">{{ course.course_number }} - {{ course.course_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Exam Name</label>
+                        <input type="text" class="form-control" name="exam_name" placeholder="e.g., Midterm 1, Final Exam" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Exam Date</label>
+                        <input type="date" class="form-control" name="exam_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Preparation Hours Needed</label>
+                        <input type="number" class="form-control" name="prep_hours_needed" value="20" min="1" max="200" required>
+                        <small class="text-muted">Recommended: 15-25 hours for major exams</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createStudyPlan()">Create Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function createStudyPlan() {
+    const form = document.getElementById('createPlanForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        course_id: formData.get('course_id'),
+        exam_name: formData.get('exam_name'),
+        exam_date: formData.get('exam_date'),
+        prep_hours_needed: parseInt(formData.get('prep_hours_needed'))
+    };
+    
+    fetch('/create_study_plan', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('Study plan created successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    })
+    .catch(error => {
+        alert('Error creating study plan');
+    });
+}
+
+function logStudyHours(planId) {
+    const hours = prompt('How many hours did you study?');
+    if (hours && !isNaN(hours) && parseFloat(hours) > 0) {
+        fetch('/log_study_hours', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                plan_id: planId,
+                hours: parseFloat(hours)
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert(`Logged ${hours} hours! Total: ${result.total_hours} hours (${result.progress_percent.toFixed(1)}% complete)`);
+                location.reload(); // Refresh to show updated progress
+            } else {
+                alert('Error: ' + result.error);
+            }
+        })
+        .catch(error => {
+            alert('Error logging hours. Please try again.');
+        });
+    }
+}
+</script>
+{% endblock %}

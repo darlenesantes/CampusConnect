@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+
+{% block title %}Messages - Purdue Study Groups{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2><i class="bi bi-envelope me-2"></i>Messages</h2>
+        <p class="text-muted">Connect with your study partners</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-inbox me-2"></i>Received Messages ({{ received_messages|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if received_messages %}
+                    {% for message in received_messages %}
+                    <div class="message-item p-3 mb-2 border rounded {% if not message.is_read %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ message.subject }}</h6>
+                                <small class="text-muted">From: {{ message.sender.name }}</small>
+                            </div>
+                            <small class="text-muted">{{ message.timestamp.strftime('%m/%d %I:%M %p') }}</small>
+                        </div>
+                        <p class="mt-2 mb-1">{{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}</p>
+                        {% if message.message_type == 'study_request' %}
+                        <span class="badge bg-primary">Study Request</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No messages yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-send me-2"></i>Sent Messages ({{ sent_messages|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if sent_messages %}
+                    {% for message in sent_messages %}
+                    <div class="message-item p-3 mb-2 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ message.subject }}</h6>
+                                <small class="text-muted">To: {{ message.recipient.name }}</small>
+                            </div>
+                            <small class="text-muted">{{ message.timestamp.strftime('%m/%d %I:%M %p') }}</small>
+                        </div>
+                        <p class="mt-2 mb-1">{{ message.content[:100] }}{% if message.content|length > 100 %}...{% endif %}</p>
+                        {% if message.message_type == 'study_request' %}
+                        <span class="badge bg-primary">Study Request</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4">No sent messages</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
