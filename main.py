@@ -12,6 +12,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
+import json
 
 # Load environment variables
 env_path = Path(__file__).resolve().parent / ".env"
@@ -21,8 +22,10 @@ app = Flask(__name__, template_folder='app/templates', static_folder='app/static
 CORS(app, origins=['http://127.0.0.1:5000/', 'https://seocampusconnect.pythonanywhere.com/'])
 
 # Configuration
+# sqlite:////home/SEOCampusConnect/CampusConnect/pcampus_connect.db
 app.config['SECRET_KEY'] = secrets.token_hex(16)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///purdue_campus_connect.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/SEOCampusConnect/CampusConnect/purdue_campus_connect.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///purdue_campus_connect.db' # Change to above URI in server
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
@@ -331,7 +334,10 @@ def init_db():
         
         # Add courses from Purdue API
         print("Fetching Purdue courses...")
-        purdue_courses = PurdueAPI.get_courses()
+        with open('purdue_courses.json', 'r') as file:
+            data = json.load(file)
+        
+        purdue_courses = data.get('value', [])
         
         added_courses = set()
         if purdue_courses:
@@ -397,6 +403,7 @@ def index():
 
 @app.route('/login')
 def login():
+    init_db()
     redirect_uri = url_for('callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
