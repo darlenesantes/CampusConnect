@@ -277,6 +277,7 @@ def index():
 
 @app.route('/login')
 def login():
+    init_db()
     redirect_uri = url_for('callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
