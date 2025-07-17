@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# This is where we define matching logic for study groups
-=======
 from app.database.user import User
 from app.database.course import Course, UserCourse
 
@@ -36,4 +33,3 @@ def find_study_matches(user_id):
     # Sort by compatibility
     matches.sort(key=lambda x: x['compatibility'], reverse=True)
     return matches[:10]  # Return top 10 matches
->>>>>>> e86c179ae670f259e3f9485453cc6bd9771385c7
