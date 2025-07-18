@@ -12,7 +12,6 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
-import json
 
 # Load environment variables
 env_path = Path(__file__).resolve().parent / ".env"
@@ -22,10 +21,8 @@ app = Flask(__name__, template_folder='app/templates', static_folder='app/static
 CORS(app, origins=['http://127.0.0.1:5000/', 'https://seocampusconnect.pythonanywhere.com/'])
 
 # Configuration
-# sqlite:////home/SEOCampusConnect/CampusConnect/pcampus_connect.db
 app.config['SECRET_KEY'] = secrets.token_hex(16)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/SEOCampusConnect/CampusConnect/purdue_campus_connect.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///purdue_campus_connect.db' # Change to above URI in server
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///purdue_campus_connect.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['GOOGLE_CLIENT_ID'] = os.getenv('GOOGLE_CLIENT_ID')
 app.config['GOOGLE_CLIENT_SECRET'] = os.getenv('GOOGLE_CLIENT_SECRET')
@@ -98,6 +95,20 @@ class StudyPlan(db.Model):
     exam_date = db.Column(db.DateTime, nullable=False)
     prep_hours_needed = db.Column(db.Integer, default=20)
     hours_completed = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class RoomBooking(db.Model):
+    __tablename__ = 'room_booking'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    location_name = db.Column(db.String(200), nullable=False)
+    room_number = db.Column(db.String(50), nullable=False)
+    booking_date = db.Column(db.Date, nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    purpose = db.Column(db.String(200))
+    group_size = db.Column(db.Integer, default=1)
+    status = db.Column(db.String(20), default='active')  # active, cancelled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class PurdueLocation(db.Model):
@@ -334,10 +345,7 @@ def init_db():
         
         # Add courses from Purdue API
         print("Fetching Purdue courses...")
-        with open('purdue_courses.json', 'r') as file:
-            data = json.load(file)
-        
-        purdue_courses = data.get('value', [])
+        purdue_courses = PurdueAPI.get_courses()
         
         added_courses = set()
         if purdue_courses:
@@ -392,6 +400,7 @@ def init_db():
         
         print("Purdue database initialized!")
         print(f"Created: {SimpleCourse.query.count()} courses, {PurdueLocation.query.count()} locations, {SimpleUser.query.filter_by(is_demo_user=True).count()} demo users")
+        print("Room booking system ready!")
 
 # Routes
 @app.route('/')
@@ -403,7 +412,6 @@ def index():
 
 @app.route('/login')
 def login():
-    init_db()
     redirect_uri = url_for('callback', _external=True)
     return google.authorize_redirect(redirect_uri)
 
@@ -634,28 +642,201 @@ def log_study_hours():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
+@app.route('/book_room', methods=['POST'])
+def book_room():
+    """Book a study room"""
+    if 'user' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    try:
+        data = request.get_json()
+        user_id = session['user']['id']
+        
+        # Validate booking data
+        required_fields = ['location_name', 'room_number', 'booking_date', 'start_time', 'end_time', 'group_size']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'Missing {field}'})
+        
+        booking_date = datetime.strptime(data['booking_date'], '%Y-%m-%d').date()
+        start_time = datetime.strptime(data['start_time'], '%H:%M').time()
+        end_time = datetime.strptime(data['end_time'], '%H:%M').time()
+        
+        # Check for conflicts
+        existing_booking = RoomBooking.query.filter_by(
+            location_name=data['location_name'],
+            room_number=data['room_number'],
+            booking_date=booking_date,
+            status='active'
+        ).filter(
+            ((RoomBooking.start_time <= start_time) & (RoomBooking.end_time > start_time)) |
+            ((RoomBooking.start_time < end_time) & (RoomBooking.end_time >= end_time)) |
+            ((RoomBooking.start_time >= start_time) & (RoomBooking.end_time <= end_time))
+        ).first()
+        
+        if existing_booking:
+            return jsonify({'success': False, 'error': 'Room is already booked for this time slot'})
+        
+        # Create booking
+        booking = RoomBooking(
+            user_id=user_id,
+            location_name=data['location_name'],
+            room_number=data['room_number'],
+            booking_date=booking_date,
+            start_time=start_time,
+            end_time=end_time,
+            purpose=data.get('purpose', ''),
+            group_size=int(data['group_size'])
+        )
+        
+        db.session.add(booking)
+        db.session.commit()
+        
+        # Send confirmation email
+        user = SimpleUser.query.get(user_id)
+        if user:
+            email_subject = f"Room Booking Confirmation - {data['room_number']}"
+            email_content = f"""
+            Your study room has been successfully booked!
+            
+            Details:
+            • Room: {data['room_number']} at {data['location_name']}
+            • Date: {booking_date.strftime('%B %d, %Y')}
+            • Time: {start_time.strftime('%I:%M %p')} - {end_time.strftime('%I:%M %p')}
+            • Group Size: {data['group_size']} people
+            • Purpose: {data.get('purpose', 'Study session')}
+            
+            Please arrive on time and follow all library policies. Boiler Up!
+            """
+            send_email_notification(user.email, email_subject, email_content)
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Room booked successfully!',
+            'booking_id': booking.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/my_bookings')
+def my_bookings():
+    """View user's room bookings"""
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    
+    user_id = session['user']['id']
+    
+    # Get upcoming bookings
+    upcoming_bookings = RoomBooking.query.filter_by(
+        user_id=user_id, 
+        status='active'
+    ).filter(
+        RoomBooking.booking_date >= datetime.now().date()
+    ).order_by(RoomBooking.booking_date, RoomBooking.start_time).all()
+    
+    # Get past bookings (last 30 days)
+    past_date = datetime.now().date() - timedelta(days=30)
+    past_bookings = RoomBooking.query.filter_by(
+        user_id=user_id
+    ).filter(
+        RoomBooking.booking_date >= past_date,
+        RoomBooking.booking_date < datetime.now().date()
+    ).order_by(RoomBooking.booking_date.desc(), RoomBooking.start_time.desc()).all()
+    
+    return render_template('my_bookings.html', 
+                         upcoming_bookings=upcoming_bookings, 
+                         past_bookings=past_bookings,
+                         now=datetime.now())
+
+@app.route('/cancel_booking/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    """Cancel a room booking"""
+    if 'user' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    try:
+        booking = RoomBooking.query.get(booking_id)
+        if not booking:
+            return jsonify({'success': False, 'error': 'Booking not found'})
+        
+        if booking.user_id != session['user']['id']:
+            return jsonify({'success': False, 'error': 'Unauthorized'})
+        
+        # Can only cancel future bookings
+        booking_datetime = datetime.combine(booking.booking_date, booking.start_time)
+        if booking_datetime <= datetime.now():
+            return jsonify({'success': False, 'error': 'Cannot cancel past bookings'})
+        
+        booking.status = 'cancelled'
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Booking cancelled successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/find_study_rooms')
 def find_study_rooms():
-    """Get available study rooms at Purdue"""
+    """Get available study rooms at Purdue with real booking status"""
     if 'user' not in session:
         return jsonify({'error': 'Not logged in'}), 401
     
     # Get study locations from database
     study_locations = PurdueLocation.query.filter_by(location_type='library').all()
     
+    # Get current date and time for availability checking
+    current_date = datetime.now().date()
+    current_time = datetime.now().time()
+    
     rooms = []
     for location in study_locations:
-        # Simulate room availability (in real app, this would check actual booking system)
         available_rooms = []
         room_count = min(location.capacity // 20, 8)  # Estimate rooms based on capacity
         
         for i in range(1, room_count + 1):
-            # Randomly make some rooms available vs booked
-            status = 'available' if random.random() > 0.3 else 'booked'
+            room_number = f'Room {i:03d}'
+            
+            # Check if room is currently booked
+            current_booking = RoomBooking.query.filter_by(
+                location_name=location.name,
+                room_number=room_number,
+                booking_date=current_date,
+                status='active'
+            ).filter(
+                RoomBooking.start_time <= current_time,
+                RoomBooking.end_time > current_time
+            ).first()
+            
+            # Check next available slot
+            next_booking = RoomBooking.query.filter_by(
+                location_name=location.name,
+                room_number=room_number,
+                booking_date=current_date,
+                status='active'
+            ).filter(
+                RoomBooking.start_time > current_time
+            ).order_by(RoomBooking.start_time).first()
+            
+            status = 'booked' if current_booking else 'available'
+            next_available = None
+            if current_booking and next_booking:
+                next_available = current_booking.end_time.strftime('%I:%M %p')
+            elif current_booking:
+                next_available = current_booking.end_time.strftime('%I:%M %p')
+            
             available_rooms.append({
-                'room_number': f'Room {i:03d}',
+                'room_number': room_number,
                 'capacity': random.choice([4, 6, 8, 12]),
                 'status': status,
+                'next_available': next_available,
+                'current_booking': {
+                    'user': f"User {current_booking.user_id}" if current_booking else None,
+                    'end_time': current_booking.end_time.strftime('%I:%M %p') if current_booking else None,
+                    'purpose': current_booking.purpose if current_booking else None
+                } if current_booking else None,
                 'amenities': location.amenities.split(', ') if location.amenities else []
             })
         
